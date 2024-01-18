@@ -1,0 +1,75 @@
+#crimson
+set style line 1 linetype 1 linewidth 3.0 linecolor rgb "#DC143C" 
+#dark green
+set style line 2 linetype 1 linewidth 3.0 linecolor rgb "#008000"
+#navy
+set style line 3 linetype 1 linewidth 3.0 linecolor rgb "#0000CD"
+#fuscia
+set style line 4 linetype 1 linewidth 3.0 linecolor rgb "#C71585"
+#turquoise
+set style line 5 linetype 1 linewidth 3.0 linecolor rgb "#1E90FF"
+#orange
+set style line 6 linetype 1 linewidth 3.0 linecolor rgb "#FFA500"
+#blueviolet
+set style line 7 linetype 1 linewidth 3.0 linecolor rgb "#8A2BE2"
+#saddlebrown
+set style line 8 linetype 1 linewidth 3.0 linecolor rgb "#8B4513"
+#cadetblue
+set style line 9 linetype 1 linewidth 3.0 linecolor rgb "#5F9EA0"
+#chartreuse
+set style line 10 linetype 1 linewidth 3.0 linecolor rgb "#7FFF00"
+#deepSky blue
+set style line 11 linetype 1 linewidth 3.0 linecolor rgb "#00BFFF"
+#yellow
+set style line 12 linetype 1 linewidth 3.0 linecolor rgb "#FFFF00"
+#violet
+set style line 13 linetype 1 linewidth 3.0 linecolor rgb "#EE82EE"
+#slate grey
+set style line 14 linetype 1 linewidth 3.0 linecolor rgb "#708090"
+#tomato
+set style line 15 linetype 1 linewidth 3.0 linecolor rgb "#FF6347"
+#turquoise
+set style line 16 linetype 1 linewidth 3.0 linecolor rgb "#40E0D0"
+#royal fuscia
+set style line 17 linetype 1 linewidth 3.0 linecolor rgb "#FF00FF"
+
+set terminal postscript eps enhanced color font 15
+set datafile commentschar '#'
+set grid
+
+#set xrange[-10:100]
+
+TMARGIN = "set tmargin at screen 0.91; set bmargin at screen 0.64"
+MMARGIN = "set tmargin at screen 0.64; set bmargin at screen 0.37"
+BMARGIN = "set tmargin at screen 0.37; set bmargin at screen 0.1"
+LMARGIN = "set lmargin at screen 0.15; set rmargin at screen 0.95"
+RMARGIN = "set lmargin at screen 0.55; set rmargin at screen 0.95"
+NOXTICS = "set xtics (''0,''5,''10,''15,''20,''25,''30,''35); unset xlabel;"
+XTICS = "set xtics ('0'0,'5'5,'10'10,'15'15,'20'20,'25'25,'30'30,'35'35);"
+YTICS0 = "set ytics ('0.92'0.92,'0.94'0.94,'0.96'0.96,'0.98'0.98,'1.0'1.0,'1.02'1.02,'1.04'1.04,'1.06'1.06);"
+YTICS1 = "set ytics ('0.82'0.82,'0.84'0.84,'0.86'0.86,'0.88'0.88,'0.9'0.9,'0.92'0.92,'0.94'0.94);"
+
+set output outputFile
+unset key
+set title plotTitle
+
+set multiplot layout 3,1 rowsfirst
+set xrange[0:32]
+set ylabel yTitleVp
+#set yrange[ydown0:yup0]
+@TMARGIN;@LMARGIN;
+@NOXTICS;
+plot inputFile u 1:3 every 7::int(channel) w points ls 17 pt 7 ps 2
+unset title
+set ylabel yTitleVn
+#set yrange[ydown1:yup1]
+@MMARGIN;@LMARGIN;
+@NOXTICS;
+plot inputFile u 1:4 every 7::int(channel) w points ls 5 pt 7 ps 2
+set ylabel yTitleI
+#set yrange[ydown2:yup2]
+@BMARGIN;@LMARGIN;
+@XTICS;
+set xlabel xTitle 
+plot inputFile u 1:($5+$6):9 every 7::int(channel) w yerrorbars ls 6  pt 7 ps 2 
+unset multiplot

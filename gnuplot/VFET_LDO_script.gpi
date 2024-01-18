@@ -1,0 +1,70 @@
+#crimson
+set style line 1 linetype 1 linewidth 3.0 linecolor rgb "#DC143C" 
+#dark green
+set style line 2 linetype 1 linewidth 3.0 linecolor rgb "#008000"
+#navy
+set style line 3 linetype 1 linewidth 3.0 linecolor rgb "#0000CD"
+#fuscia
+set style line 4 linetype 1 linewidth 3.0 linecolor rgb "#C71585"
+#turquoise
+set style line 5 linetype 1 linewidth 3.0 linecolor rgb "#1E90FF"
+#orange
+set style line 6 linetype 1 linewidth 3.0 linecolor rgb "#FFA500"
+#blueviolet
+set style line 7 linetype 1 linewidth 3.0 linecolor rgb "#8A2BE2"
+#saddlebrown
+set style line 8 linetype 1 linewidth 3.0 linecolor rgb "#8B4513"
+#cadetblue
+set style line 9 linetype 1 linewidth 3.0 linecolor rgb "#5F9EA0"
+#chartreuse
+set style line 10 linetype 1 linewidth 3.0 linecolor rgb "#7FFF00"
+#deepSky blue
+set style line 11 linetype 1 linewidth 3.0 linecolor rgb "#00BFFF"
+#yellow
+set style line 12 linetype 1 linewidth 3.0 linecolor rgb "#FFFF00"
+#violet
+set style line 13 linetype 1 linewidth 3.0 linecolor rgb "#EE82EE"
+#slate grey
+set style line 14 linetype 1 linewidth 3.0 linecolor rgb "#708090"
+#tomato
+set style line 15 linetype 1 linewidth 3.0 linecolor rgb "#FF6347"
+#turquoise
+set style line 16 linetype 1 linewidth 3.0 linecolor rgb "#40E0D0"
+
+
+set terminal postscript eps enhanced color font 15
+set datafile commentschar '#'
+set grid
+
+#set xrange[-10:100]
+
+TMARGIN = "set tmargin at screen 0.90; set bmargin at screen 0.5"
+BMARGIN = "set tmargin at screen 0.5; set bmargin at screen 0.10"
+LMARGIN = "set lmargin at screen 0.15; set rmargin at screen 0.95"
+RMARGIN = "set lmargin at screen 0.55; set rmargin at screen 0.95"
+NOXTICS = "set xtics (''0,''5,''10,''15,''20,''25,''30,''35); unset xlabel;"
+XTICS = "set xtics ('0'0,'5'5,'10'10,'15'15,'20'20,'25'25,'30'30,'35'35);"
+YTICS0 = "set ytics ('6.95'6.95,'7.0'7.0,'7.05'7.05,'7.1'7.1,'7.15'7.15,'7.2'7.2,'7.25'7.25,'7.3'7.3);"
+YTICS1 = "set ytics ('-40'-40,'-20'-20,'0'0,'20'20,'40'40,'60'60);"
+
+set output outputFile
+unset key
+set title plotTitle
+
+set multiplot layout 2,1 rowsfirst
+set xlabel xTitleV
+set ylabel yTitleV
+set yrange[6.9:7.33]
+set xrange[0:32]
+@TMARGIN;@LMARGIN;
+@NOXTICS;@YTICS0;
+plot inputFile u 1:10:18 w yerrorbars ls 14 pt 7 ps 2
+set xlabel xTitleI
+set ylabel yTitleI
+set yrange[-45:65]
+@BMARGIN;@LMARGIN;
+@XTICS;@YTICS1;
+unset title
+set xlabel xTitleI 
+plot inputFile u 1:11:19 w yerrorbars ls 7 pt 7 ps 2 
+unset multiplot

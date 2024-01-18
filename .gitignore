@@ -1,0 +1,6 @@
+*.txt
+*.pdf
+bin/*
+~bin/.keepme
+obj/*
+~obj/.keepme
