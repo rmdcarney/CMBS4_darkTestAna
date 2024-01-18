@@ -49,7 +49,7 @@ void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, 
     
     TGraph *g = new TGraph(x.size(), &(x[0]), &(y[0]));
     g->Draw("a*");
-    
+    g->SetTitle("IV measurement;Voltage across TES [V];Current measured in TES branch by SQUID [uA];");
     gStyle->SetOptFit(0);
    l->SetLineColor(kRed);
    l->SetLineWidth(3);    
@@ -75,9 +75,9 @@ double getMean( std::vector<double>& data ){
     return mean;
 }
 
-void invert( std::vector<double>& data ){
+void transform( std::vector<double>& data, double scalar ){
 
-    std::transform(data.begin(), data.end(), data.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+    std::transform(data.begin(), data.end(), data.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, scalar));
     return;
 }
 
@@ -122,8 +122,9 @@ int main(int argc, char *argv[]){
     std::cout<<"Number of data points: "<<std::endl;
     std::cout<<Vset.size()<<", "<<Imeas.size()<<std::endl;
     
-    //Reflect curve in x-axis
-    invert( Imeas );
+    //Reflect curve in x-axis amd convert from volts to uA
+    const double conversion = -1./0.03617; //Conversion factor for SQUID 2 taken from here: https://commons.lbl.gov/display/CMB/BlueFors+Dilution+Refrigerator#BlueForsDilutionRefrigerator-UsingQuantumDesignSQUIDsfor10mOhmTES
+    transform( Imeas, conversion );
     
     //Fit linear region
     std::cout<<"Fitting linear portion..."<<std::endl;
