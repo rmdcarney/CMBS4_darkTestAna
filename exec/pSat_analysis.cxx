@@ -258,10 +258,13 @@ int main(int argc, char *argv[]){
     //Recover the TES resistance by subtracting parasitic
     std::vector<double> TES_resistance = divide(V1,Imeas);
     removeOffset( TES_resistance, Rp ); 
-    std::vector<double> currentSq = multiply(Imeas, Imeas);
-    transform( currentSq, 1e-3);
-    std::vector<double> power = multiply( currentSq, TES_resistance );
 
+    //P = Imeas * I meas * TES_resistance
+    std::vector<double> currentSq = multiply(Imeas, Imeas); //I^2
+    transform( currentSq, 1e-3); //fW to pW
+    std::vector<double> power = multiply( currentSq, TES_resistance ); //P = I^2 . R
+
+    //Plot
     std::string title_plot5 = "Power vs resistance;TES resistance [mOhm];TES power [pW];";
     plot( TES_resistance, power, "5_PR.pdf", title_plot5 );
 
