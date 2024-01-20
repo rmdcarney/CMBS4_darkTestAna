@@ -43,14 +43,14 @@ TF1* fit(std::vector<double> &x, std::vector<double> &y, double lo, double hi, s
     return f;
 }
 
-void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, TLine* l = 0){
+void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, std::string axesTitles, TLine* l = 0){
 
     TCanvas *c = new TCanvas("c","PSat");
     c->SetGrid();
     
     TGraph *g = new TGraph(x.size(), &(x[0]), &(y[0]));
     g->Draw("a*");
-    g->SetTitle("IV measurement;Voltage across TES [nV];Current measured in TES branch by SQUID [uA];");
+    g->SetTitle(axesTitles.c_str());
     gStyle->SetOptFit(0);
    if(l){
        l->SetLineColor(kRed);
@@ -90,7 +90,16 @@ void transform( std::vector<double>& data, double scalar, std::vector<double>& r
     return;
 }
 
-std::vector<double>  minus( std::vector<double>& a, std::vector<double>&b ){
+std::vector<double> add( std::vector<double>& a, std::vector<double>& b ){
+
+    std::vector<double> result;
+    for(unsigned i=0; i<a.size(); i++){
+        result.push_back(a[i] + b[i]);
+    }
+
+    return result;
+}
+std::vector<double>  minus( std::vector<double>& a, std::vector<double>& b ){
 
     std::vector<double> result;
     for(unsigned i=0; i<a.size(); i++){
@@ -100,9 +109,39 @@ std::vector<double>  minus( std::vector<double>& a, std::vector<double>&b ){
     return result;
 }
 
+std::vector<double> divide( std::vector<double>& a, std::vector<double>& b ){
+
+    std::vector<double> result;
+    for(unsigned i=0; i<a.size(); i++){
+        result.push_back(a[i]/b[i]);
+    }
+    return result;
+}
+
+std::vector<double> multiply( std::vector<double>& a, std::vector<double>& b ){
+
+    std::vector<double> result;
+    for(unsigned i=0; i<a.size(); i++){
+        result.push_back(a[i]*b[i]);
+    }
+    return result;
+}
+
 void removeOffset( std::vector<double>& data, double offset ){
     
     for(auto& element : data) element -= offset;
+    return;
+}
+
+//Overloaded with bounds
+void removeOffset( std::vector<double>& data, double offset, unsigned start, unsigned end ){
+    
+    for(unsigned i=0; i<data.size();i++){
+        if( i<start ) continue;
+        if( i>end   ) continue;
+        data[i] -= offset;
+    }
+
     return;
 }
 
@@ -153,6 +192,22 @@ int main(int argc, char *argv[]){
     std::vector<double> Imeas;
     transform( SQUIDCtrl_V, conversion, Imeas );
    
+    //====================================
+    // Fit and recover PSat
+    //====================================
+    //Fit linear region
+    std::cout<<"Fitting normal region to recover offset..."<<std::endl;
+    TF1* f = fit( I_keithley, Imeas, 1.05, 1.15, "normalFit.pdf" ); 
+    double c = f->GetParameter(0);
+    double m = f->GetParameter(1);
+
+    //Subtract offset - this sets an absolute range for the SQUID (which was untethered before)
+    removeOffset( Imeas, c );
+    TLine* l = createLine( I_keithley, m );
+    std::cout<<"Trying to draw line at ("<<l->GetX1()<<","<<l->GetY1()<<") to ("<<l->GetX2()<<","<<l->GetY2()<<")"<<std::endl;
+    std::string title_plot1 = "IV measurement;Current measured by sourcemeter [mA];Current measured in TES branch by SQUID [uA];";
+    plot(I_keithley , Imeas, "1_offset.pdf", title_plot1, l); 
+   
     //================================================================
     // Convert recorded current on sourcemeter to voltage across TES 
     //================================================================
@@ -166,36 +221,50 @@ int main(int argc, char *argv[]){
     std::cout<<"V1 size: "<<V1.size()<<std::endl;
     std::cout<<"Imeas size: "<<Imeas.size()<<std::endl;
 
-    //====================================
-    // Fit and recover PSat
-    //====================================
-    //Fit linear region
-    std::cout<<"Fitting parasitic region..."<<std::endl;
-    TF1* fp = fit( V1, Imeas, 0, 100, "parasiticFit.pdf" ); 
-    double cp = fp->GetParameter(0);
-    double mp = fp->GetParameter(1);
-    std::cout<<"Parasitic resistance calculated as: "<<(1./mp)<<" [mOhm] "<<std::endl;
-    std::cout<<"Fitting normal region..."<<std::endl;
-    TF1* fn = fit( V1, Imeas, 280, 450, "normalFit.pdf" ); 
-    double cn = fn->GetParameter(0);
-    double mn = fn->GetParameter(1);
-    std::cout<<"Normal resistance calculated as: "<<(1./mn)-(1./mp)<<" [mOhm] "<<std::endl;
-
-    //Subtract offset - this sets an absolute range for the SQUID (which was untethered before)
-    removeOffset( Imeas, cn );
-    TLine* l = createLine( V1, mn );
-    std::cout<<"Trying to draw line at ("<<l->GetX1()<<","<<l->GetY1()<<") to ("<<l->GetX2()<<","<<l->GetY2()<<")"<<std::endl;
-    //for(unsigned i=0;i<Imeas.size();i++) std::cout<<V1[i]<<"\t"<<Imeas[i]<<std::endl;
-    plot( V1, Imeas, "offset.pdf",l); 
+    std::string title_plots34 = "IV measurement;Voltage across TES [nV];Current measured in TES branch by SQUID [uA];";
+    plot(V1 , Imeas, "2_unitConversion.pdf", title_plots34); 
     
     //====================================
     // Remove Rp
     //====================================
+    //Fit parasitic region and remove offset
+    std::cout<<"Fitting parasitic region to measure resistance and remove offset..."<<std::endl;
+    TF1* fp = fit( V1, Imeas, 10., 140., "parasiticFit.pdf" ); 
+    double cp = fp->GetParameter(0);
+    double mp = fp->GetParameter(1);
+    TLine* lp = createLine( V1, mp );
+    double Rp = 1./mp;
+    std::cout<<"Parasitic resistance calculated as: "<<Rp<<" [mOhm] "<<std::endl;
+    removeOffset( Imeas, cp, 324, 465 ); //Remove offset for the SQUID part of the data
+    
+    //Fit normal region and calculate normal re
+    std::cout<<"Fitting normal region to measure normal resistance..."<<std::endl;
+    TF1* fn = fit( V1, Imeas, 500., 560., "normalFit.pdf" ); 
+    double cn = fn->GetParameter(0);
+    double mn = fn->GetParameter(1);
+    TLine* ln = createLine( V1, mn );
+    double Rn = (1./mn)-Rp;
+    std::cout<<"Trying to draw line at ("<<ln->GetX1()<<","<<ln->GetY1()<<") to ("<<ln->GetX2()<<","<<ln->GetY2()<<")"<<std::endl;
+    std::cout<<"Normal resistance calculated as: "<<Rn<<" [mOhm] "<<std::endl;
+    
+    plot(V1 , Imeas, "3_Rp_corrected.pdf", title_plots34, lp); 
+    plot(V1 , Imeas, "4_normalFit.pdf", title_plots34, ln); 
 
     //====================================
     // Fit and find Psat
     //====================================
-    //plot(I_keithley , Imeas);
+    // Make a P=I^2.R_tes vs R_tes plot
+   
+    //Recover the TES resistance by subtracting parasitic
+    std::vector<double> TES_resistance = divide(V1,Imeas);
+    removeOffset( TES_resistance, Rp ); 
+    std::vector<double> currentSq = multiply(Imeas, Imeas);
+    transform( currentSq, 1e-3);
+    std::vector<double> power = multiply( currentSq, TES_resistance );
+
+    std::string title_plot5 = "Power vs resistance;TES resistance [mOhm];TES power [pW];";
+    plot( TES_resistance, power, "5_PR.pdf", title_plot5 );
+
 
     return 0;
 
