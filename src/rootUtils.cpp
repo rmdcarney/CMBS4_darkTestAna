@@ -19,8 +19,7 @@ namespace rootUtils{
         //Fit the graph with the predefined "pol3" function
         double lo = x[lo_i];
         double hi = x[hi_i];
-        std::cout<<"Fitting from "<<lo<<" to "<<hi<<std::endl;
-        g->Fit("pol1","","",lo,hi);
+        g->Fit("pol1","q","",lo,hi);
 
         //Access the fit resuts
         TF1 *f = g->GetFunction("pol1");
@@ -52,11 +51,42 @@ namespace rootUtils{
 
         return;
     }
+    
+    void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, std::string axesTitles, std::vector<TLine*> l){
+
+        TCanvas *c = new TCanvas("c","PSat");
+        c->SetGrid();
+
+        TGraph *g = new TGraph(x.size(), &(x[0]), &(y[0]));
+        g->Draw("a*");
+        g->SetTitle(axesTitles.c_str());
+        gStyle->SetOptFit(0);
+        
+        for( unsigned i=0; i<l.size(); i++){
+                        
+            l.at(i)->SetLineColor(i+2);
+            l.at(i)->SetLineWidth(3);    
+            l.at(i)->Draw();
+        }
+
+        c->SaveAs(filename.c_str());
+
+        return;
+    }
+
 
     TLine* createLine( std::vector<double>& data, double m ){
 
         double max = *(std::max_element(data.begin(), data.end()));
         TLine* l = new TLine(0,0,max,max*m);
+        return l;
+    }
+    
+    TLine* createVertLine( std::vector<double>& y, std::vector<double>& x, double point ){
+
+        double min = *(std::min_element(y.begin(), y.end()));
+        double max = *(std::max_element(y.begin(), y.end()));
+        TLine* l = new TLine(x[point],min,x[point],max); //Constructor: x1, y1, x2, y2
         return l;
     }
 

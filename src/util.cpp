@@ -85,7 +85,6 @@ namespace util{
         unsigned diff = unsigned((range-adjRange)/2.);
         lo = tmpLo + diff;
         hi = tmpHi - diff;
-        std::cout<<"lo-hi: "<<lo<<" - "<<hi<<std::endl;
         
         return 0;
     }
