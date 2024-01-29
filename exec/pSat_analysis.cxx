@@ -84,7 +84,13 @@ int main(int argc, char *argv[]){
     rootUtils::plot( I_keithley, d2, "0_diff2.root", "");
 
     //Use derivatives to select fit regions
-
+    unsigned par_i_lo, par_i_hi;
+    if( util::getParasiticRegion( d2, par_i_lo, par_i_hi ) ) return 0;
+    std::cout<<"xlo: "<<I_keithley[par_i_lo]<<", xhi: "<<I_keithley[par_i_hi]<<std::endl;    
+    
+    unsigned norm_i_lo, norm_i_hi;
+    if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi ) ) return 0;
+    std::cout<<"xlo: "<<I_keithley[norm_i_lo]<<", xhi: "<<I_keithley[norm_i_hi]<<std::endl;    
 
     TF1* f = rootUtils::fit( I_keithley, Imeas, 1.05, 1.15, "normalFit.pdf" ); 
     double c = f->GetParameter(0);

@@ -21,5 +21,74 @@ namespace util{
         return 0;
     }
 
+    //Using the supplied second derivative vector, choose the upper bound of the parasitic fit region
+    unsigned getParasiticRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi ){
 
+        //Starting from the lowest x-value, find when d2 exceeds 2. Tis assumes d2 has been sorted and normalized
+        double threshold = 2.;
+        unsigned tmp = 2e6;
+        for(unsigned i=0; i<d2.size(); i++){
+            
+            if( std::fabs(d2[i]) > threshold && i>0 ){
+                tmp = i-1;
+                break;
+            }
+        }
+        if( tmp > 1e6 ){
+            std::cout<<"ERROR: something went wrong trying to find parasitic fit region. Second derivative did not exceed "<<threshold<<". Exiting."<<std::endl;
+            return 1;
+        }
+
+        //Select the middle 90% of that range, just in case the border is weird.
+        //TODO does it make sense to do a 90% here?
+        lo = 0;
+        unsigned range = tmp - lo;
+        double range90 = 0.9*range;
+        unsigned adjRange = std::rint(range90);
+        unsigned diff = range-adjRange;
+        lo += unsigned( diff/2. );
+        hi = lo + adjRange;
+        
+        return 0;
+    }
+
+    //Using the supplied second derivative vector, choose the upper bound of the normal fit region
+    unsigned getNormalRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi ){
+
+        //Starting from the lowest x-value, find when d2 exceeds 2. Tis assumes d2 has been sorted and normalized
+        double threshold_hi = 0.02;
+        double threshold_lo = 0.05;
+        unsigned tmpHi(2e6), tmpLo(2e6);
+        for(unsigned i=d2.size()-1; i>=0; i--){
+            
+            if( std::fabs(d2[i]) < threshold_hi ){
+                tmpHi = i;
+                break;
+            }
+        }
+        for(unsigned i=tmpHi-1; i>=0; i--){
+
+            if( std::fabs(d2[i]) > threshold_lo ){
+                tmpLo = i;
+                break;
+            }
+        }
+
+        if( tmpLo > 1e6 || tmpHi > 1e6 ){
+            std::cout<<"ERROR: something went wrong trying to find normal fit region. Second derivative did not exceed "<<threshold_hi<<". Exiting."<<std::endl;
+            return 1;
+        }
+
+        //Select the middle 90% of that range, just in case the border is weird.
+        //TODO does it make sense to do a 90% here?
+        unsigned range = tmpHi - tmpLo;
+        double range90 = 0.9*range;
+        unsigned adjRange = std::rint(range90);
+        unsigned diff = unsigned((range-adjRange)/2.);
+        lo = tmpLo + diff;
+        hi = tmpHi - diff;
+        std::cout<<"lo-hi: "<<lo<<" - "<<hi<<std::endl;
+        
+        return 0;
+    }
 }
