@@ -35,7 +35,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@echo "[Compiling] $@"
 
 $(BIN_DIR)/%: $(OBJ_DIR)/%.o
-	@$(CXX) $(CFLAGS) $(LDFLAGS) $< $(OBJ) -o $@ $(LIBS)
+	@$(CXX) $(CFLAGS) $(LDFLAGS) $< $(OBJ) -o $@ 
 	@echo "[Linking] $@"
 
 #If running with sc compile with: 'make sc'
