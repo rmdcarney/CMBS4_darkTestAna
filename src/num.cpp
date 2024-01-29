@@ -81,7 +81,6 @@ namespace num{
             if( i>end   ) continue;
             data[i] -= offset;
         }
-
         return;
     }
 

@@ -92,7 +92,7 @@ int main(int argc, char *argv[]){
     if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi ) ) return 0;
     std::cout<<"xlo: "<<I_keithley[norm_i_lo]<<", xhi: "<<I_keithley[norm_i_hi]<<std::endl;    
 
-    TF1* f = rootUtils::fit( I_keithley, Imeas, 1.05, 1.15, "normalFit.pdf" ); 
+    TF1* f = rootUtils::fit( I_keithley, Imeas, norm_i_lo, norm_i_hi, "normalFit.pdf" ); 
     double c = f->GetParameter(0);
     double m = f->GetParameter(1);
 
@@ -128,19 +128,19 @@ int main(int argc, char *argv[]){
     //TODO: find fit region
     //TODO: filename
     std::cout<<"Fitting parasitic region to measure resistance and remove offset..."<<std::endl;
-    TF1* fp = rootUtils::fit( V1, Imeas, 10., 140., "parasiticFit.pdf" ); 
+    TF1* fp = rootUtils::fit( V1, Imeas, par_i_lo, par_i_hi, "parasiticFit.pdf" ); 
     double cp = fp->GetParameter(0);
     double mp = fp->GetParameter(1);
     TLine* lp = rootUtils::createLine( V1, mp );
     double Rp = 1./mp;
     std::cout<<"Parasitic resistance calculated as: "<<Rp<<" [mOhm] "<<std::endl;
-    num::removeOffset( Imeas, cp, 324, 465 ); //Remove offset for the SQUID part of the data
+    num::removeOffset( Imeas, cp, par_i_lo, par_i_hi ); //Remove offset for the SQUID part of the data
     
     //TODO: fit region
     //TODO: filename
     //Fit normal region and calculate normal re
     std::cout<<"Fitting normal region to measure normal resistance..."<<std::endl;
-    TF1* fn = rootUtils::fit( V1, Imeas, 500., 560., "normalFit.pdf" ); 
+    TF1* fn = rootUtils::fit( V1, Imeas, norm_i_lo, norm_i_hi, "normalFit.pdf" ); 
     double cn = fn->GetParameter(0);
     double mn = fn->GetParameter(1);
     TLine* ln = rootUtils::createLine( V1, mn );

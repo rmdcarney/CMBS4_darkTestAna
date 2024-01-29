@@ -22,10 +22,9 @@ namespace util{
     }
 
     //Using the supplied second derivative vector, choose the upper bound of the parasitic fit region
-    unsigned getParasiticRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi ){
+    unsigned getParasiticRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi, double threshold ){
 
         //Starting from the lowest x-value, find when d2 exceeds 2. Tis assumes d2 has been sorted and normalized
-        double threshold = 2.;
         unsigned tmp = 2e6;
         for(unsigned i=0; i<d2.size(); i++){
             
@@ -42,34 +41,33 @@ namespace util{
         //Select the middle 90% of that range, just in case the border is weird.
         //TODO does it make sense to do a 90% here?
         lo = 0;
-        unsigned range = tmp - lo;
-        double range90 = 0.9*range;
-        unsigned adjRange = std::rint(range90);
-        unsigned diff = range-adjRange;
-        lo += unsigned( diff/2. );
-        hi = lo + adjRange;
+//        unsigned range = tmp - lo;
+//        double range90 = 0.9*range;
+//        unsigned adjRange = std::rint(range90);
+//        unsigned diff = range-adjRange;
+//        lo += unsigned( diff/2. );
+//        hi = lo + adjRange;
+        hi = tmp;
         
         return 0;
     }
 
     //Using the supplied second derivative vector, choose the upper bound of the normal fit region
-    unsigned getNormalRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi ){
+    unsigned getNormalRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi, double threshold_hi, double threshold_lo ){
 
         //Starting from the lowest x-value, find when d2 exceeds 2. Tis assumes d2 has been sorted and normalized
-        double threshold_hi = 0.02;
-        double threshold_lo = 0.05;
         unsigned tmpHi(2e6), tmpLo(2e6);
-        for(unsigned i=d2.size()-1; i>=0; i--){
+        for(unsigned i=d2.size()-1; i>=0 && i<d2.size(); i--){
             
             if( std::fabs(d2[i]) < threshold_hi ){
                 tmpHi = i;
                 break;
             }
         }
-        for(unsigned i=tmpHi-1; i>=0; i--){
+        for(unsigned i=tmpHi-1; i>=0 && i<tmpHi; i--){
 
             if( std::fabs(d2[i]) > threshold_lo ){
-                tmpLo = i;
+                tmpLo = i-1;
                 break;
             }
         }

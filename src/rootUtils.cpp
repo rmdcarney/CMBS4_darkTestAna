@@ -3,7 +3,7 @@
 namespace rootUtils{
 
 
-    TF1* fit(std::vector<double> &x, std::vector<double> &y, double lo, double hi, std::string plotTitle){
+    TF1* fit(std::vector<double> &x, std::vector<double> &y, unsigned lo_i, unsigned hi_i, std::string plotTitle){
 
         TCanvas *c = new TCanvas("c","Fitting DAC calib curve");
         c->SetGrid();
@@ -17,6 +17,9 @@ namespace rootUtils{
         g->Draw("a*");
 
         //Fit the graph with the predefined "pol3" function
+        double lo = x[lo_i];
+        double hi = x[hi_i];
+        std::cout<<"Fitting from "<<lo<<" to "<<hi<<std::endl;
         g->Fit("pol1","","",lo,hi);
 
         //Access the fit resuts
