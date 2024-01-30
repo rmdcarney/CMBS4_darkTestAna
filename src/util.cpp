@@ -2,6 +2,27 @@
 
 namespace util{
 
+    unsigned importData( std::string& filename, std::vector<double>& x, std::vector<double>& y ){
+        
+        std::ifstream infile(filename);
+        std::string line;
+
+        while (std::getline(infile, line)){
+            std::istringstream iss(line);
+            double sqV, sqV_stdDev;
+            double na1, na2;
+            double SMU_I_i, SMU_I_RMS;
+            if( !(iss >> sqV >> sqV_stdDev >> na1 >> na2 >> SMU_I_i >> SMU_I_RMS ) ){ 
+                std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
+                return 1; 
+            } //ss failed
+
+            x.push_back( SMU_I_RMS );
+            y.push_back( sqV );
+        }
+        return 0;
+    }
+
     unsigned sortByX( std::vector<double>& x, std::vector<double>& y ){
 
         if( x.size() != y.size() ) return 1;

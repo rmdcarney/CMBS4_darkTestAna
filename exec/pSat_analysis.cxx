@@ -10,10 +10,8 @@
 
 //std lib
 #include <algorithm>
-#include <fstream>
 #include <iostream>
 #include <numeric>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -27,29 +25,17 @@ int main(int argc, char *argv[]){
 
     //Supress root output
     gErrorIgnoreLevel = kFatal;
+    std::string prefix = argv[2];
 
     //====================================
     // F I L E   I O 
     //====================================
     //Get data from file
-    std::ifstream infile(argv[1]);
-    std::string line;
+    std::cout<<"Reading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
-
-    std::cout<<"Reading data file: "<<argv[1]<<std::endl;
-    while (std::getline(infile, line)){
-        std::istringstream iss(line);
-        double sqV, sqV_stdDev;
-        double na1, na2;
-        double SMU_I_i, SMU_I_RMS;
-        if( !(iss >> sqV >> sqV_stdDev >> na1 >> na2 >> SMU_I_i >> SMU_I_RMS ) ){ 
-            std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
-            return 1; 
-        } //ss failed
-
-        I_keithley.push_back( SMU_I_RMS );
-        SQUIDCtrl_V.push_back( sqV );
-    }
+    std::string datafile = argv[1];
+    if( util::importData( datafile, I_keithley, SQUIDCtrl_V ) ) return 0;
+    std::cout<<"[DONE]"<<std::endl;
 
     //Sort by x
     std::cout<<"\tSorting data in x, ascending.."<<std::flush;
@@ -81,13 +67,15 @@ int main(int argc, char *argv[]){
         std::cout<<"ERROR: could not differentiate. Exiting."<<std::endl;
         return 0;
     }
-    rootUtils::plot( I_keithley, d, "0_diff.root", "");
+    std::string plotTitle = prefix + "00_diff.root";
+    rootUtils::plot( I_keithley, d, plotTitle, "");
     std::vector<double> d2;
     if( num::deriv( I_keithley, d, d2 ) ){
         std::cout<<"ERROR: could not differentiate. Exiting."<<std::endl;
         return 0;
     }
-    rootUtils::plot( I_keithley, d2, "0_diff2.root", "");
+    plotTitle = prefix + "0_diff2.root";
+    rootUtils::plot( I_keithley, d2, plotTitle, "");
 
     //Use derivatives to select fit regions
     unsigned par_i_lo, par_i_hi;
@@ -115,8 +103,9 @@ int main(int argc, char *argv[]){
     lv.push_back( l_sq_lo );
     lv.push_back( l_sq_hi );
 
+    plotTitle = prefix + "1_SQUIDtethered.pdf";
     std::string title_plot1 = "IV measurement;Current measured by sourcemeter [mA];Current measured in TES branch by SQUID [uA];";
-    rootUtils::plot(I_keithley , Imeas, "1_offset.pdf", title_plot1, lv); 
+    rootUtils::plot(I_keithley , Imeas, plotTitle, title_plot1, lv); 
     std::cout<<"[DONE]"<<std::endl;
    
     //================================================================
@@ -130,9 +119,9 @@ int main(int argc, char *argv[]){
     num::transform( V1, shuntResistance ); //V1 = I_shunt * shunt_resistance. For now will use this as votlage across TES.  Result is in nV: V = I.R, nV[1e-9] = uA[1e-6] . mOhm [1e-3]
     //for(unsigned i=0;i<V1.size();i++) std::cout<<V1[i]<<std::endl;
 
-    //TODO filename
+    plotTitle = prefix + "2_unitsConverted.pdf";
     std::string title_plots34 = "IV measurement;Voltage across TES [nV];Current measured in TES branch by SQUID [uA];";
-    rootUtils::plot(V1 , Imeas, "2_unitConversion.pdf", title_plots34); 
+    rootUtils::plot(V1 , Imeas, plotTitle, title_plots34); 
     std::cout<<"[DONE]"<<std::endl;
 
     //====================================
@@ -153,7 +142,8 @@ int main(int argc, char *argv[]){
     lp_v.push_back( lp );
     lp_v.push_back( lp_lo );
     lp_v.push_back( lp_hi );
-    rootUtils::plot(V1 , Imeas, "3_Rp_corrected.pdf", title_plots34, lp_v); 
+    plotTitle = prefix + "3_Rp_corrected.pdf";
+    rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, lp_v); 
     std::cout<<"[DONE]"<<std::endl;
     
     //TODO: filename
@@ -172,7 +162,8 @@ int main(int argc, char *argv[]){
     ln_v.push_back( ln_lo );
     ln_v.push_back( ln_hi );
     double Rn = (1./mn)-Rp;
-    rootUtils::plot(V1 , Imeas, "4_normalFit.pdf", title_plots34, ln_v); 
+    plotTitle = prefix + "4_normalFit.pdf";
+    rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, ln_v); 
     std::cout<<"[DONE]"<<std::endl;
 
     //====================================
@@ -192,8 +183,9 @@ int main(int argc, char *argv[]){
     std::vector<double> power = num::multiply( currentSq, TES_resistance ); //P = I^2 . R
 
     //Plot
+    plotTitle = prefix + "5_PR.pdf";
     std::string title_plot5 = "Power vs resistance;TES resistance [mOhm];TES power [pW];";
-    rootUtils::plot( TES_resistance, power, "5_PR.pdf", title_plot5 );
+    rootUtils::plot( TES_resistance, power, plotTitle, title_plot5 );
     std::cout<<"[DONE]"<<std::endl;
 
     std::cout<<"======= R E S U L T S ========"<<std::endl;
