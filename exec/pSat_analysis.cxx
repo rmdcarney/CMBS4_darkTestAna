@@ -31,35 +31,34 @@ int main(int argc, char *argv[]){
     // F I L E   I O 
     //====================================
     //Get data from file
-    std::cout<<"Reading data file: "<<argv[1]<<std::flush;
+    std::cout<<".\n.\n.\nReading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
     std::string datafile = argv[1];
     if( util::importData( datafile, I_keithley, SQUIDCtrl_V ) ) return 0;
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
     //Sort by x
-    std::cout<<"\tSorting data in x, ascending.."<<std::flush;
+    std::cout<<"Sorting data in x, ascending.."<<std::flush;
     if( util::sortByX( I_keithley, SQUIDCtrl_V ) ) return 0;
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
     //====================================
     // Transform to correct units
     //====================================
     //Reflect curve in x-axis amd convert from SQUID readout output: volts to current measured by SQUID: uA
     //TODO import conversion factor from lut
-    std::cout<<"\tConverting SQUID readout from voltage to current...";
+    std::cout<<"Converting SQUID readout from voltage to current...";
     const double conversion = -1./0.03617; //Conversion factor for SQUID 2 taken from here: https://commons.lbl.gov/display/CMB/BlueFors+Dilution+Refrigerator#BlueForsDilutionRefrigerator-UsingQuantumDesignSQUIDsfor10mOhmTES
     std::vector<double> Imeas;
     num::transform( SQUIDCtrl_V, conversion, Imeas );
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
    
     //=======================================
     // Find fit ranges based on shape of IV
     //=======================================
     //Fit linear region
     // TODO filename
-    std::cout<<"===== Fits ===== "<<std::endl;
-    std::cout<<"\tUsing moments to set fit ranges..."<<std::flush;
+    std::cout<<"Using moments to set fit ranges..."<<std::flush;
 
     //Calculate approximations of the 1st and 2nd moments
     std::vector<double> d;
@@ -82,12 +81,12 @@ int main(int argc, char *argv[]){
     if( util::getParasiticRegion( d2, par_i_lo, par_i_hi ) ) return 0;
     unsigned norm_i_lo, norm_i_hi;
     if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi ) ) return 0;
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
     //=======================================
     // Tether SQUID output
     //=======================================
-    std::cout<<"\tFitting normal region to tether SQUID..."<<std::flush;
+    std::cout<<"Fitting normal region to tether SQUID..."<<std::flush;
     TF1* f = rootUtils::fit( I_keithley, Imeas, norm_i_lo, norm_i_hi, "normalFit.pdf" ); 
     double c = f->GetParameter(0);
     double m = f->GetParameter(1);
@@ -106,12 +105,12 @@ int main(int argc, char *argv[]){
     plotTitle = prefix + "1_SQUIDtethered.pdf";
     std::string title_plot1 = "IV measurement;Current measured by sourcemeter [mA];Current measured in TES branch by SQUID [uA];";
     rootUtils::plot(I_keithley , Imeas, plotTitle, title_plot1, lv); 
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
    
     //================================================================
     // Convert recorded current on sourcemeter to voltage across TES 
     //================================================================
-    std::cout<<"\t Calculating voltage across TES..."<<std::flush;
+    std::cout<<"Calculating voltage across TES..."<<std::flush;
     const double shuntResistance = 0.5; //0.5 mOhm - TODO: this actual resistance still needs to be measured. 
     std::vector<double> V1;
     num::transform( I_keithley, 1e3 ); //Convert mA to uA
@@ -122,14 +121,14 @@ int main(int argc, char *argv[]){
     plotTitle = prefix + "2_unitsConverted.pdf";
     std::string title_plots34 = "IV measurement;Voltage across TES [nV];Current measured in TES branch by SQUID [uA];";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34); 
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
     //====================================
     // Measure Rp and correct offset
     //====================================
     //Fit parasitic region and remove offset
     //TODO: filename
-    std::cout<<"\tFitting parasitic region to measure resistance and remove offset..."<<std::flush;
+    std::cout<<"Fitting parasitic region to measure resistance and remove offset..."<<std::flush;
     TF1* fp = rootUtils::fit( V1, Imeas, par_i_lo, par_i_hi, "parasiticFit.pdf" ); 
     double cp = fp->GetParameter(0);
     double mp = fp->GetParameter(1);
@@ -144,13 +143,13 @@ int main(int argc, char *argv[]){
     lp_v.push_back( lp_hi );
     plotTitle = prefix + "3_Rp_corrected.pdf";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, lp_v); 
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
     
     //TODO: filename
     //====================================
     //Fit normal region and calculate normal re
     //====================================
-    std::cout<<"\tFitting normal region to measure normal resistance..."<<std::flush;
+    std::cout<<"Fitting normal region to measure normal resistance..."<<std::flush;
     TF1* fn = rootUtils::fit( V1, Imeas, norm_i_lo, norm_i_hi, "normalFit.pdf" ); 
     double cn = fn->GetParameter(0);
     double mn = fn->GetParameter(1);
@@ -164,7 +163,7 @@ int main(int argc, char *argv[]){
     double Rn = (1./mn)-Rp;
     plotTitle = prefix + "4_normalFit.pdf";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, ln_v); 
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
     //====================================
     // Fit and find Psat
@@ -186,11 +185,12 @@ int main(int argc, char *argv[]){
     plotTitle = prefix + "5_PR.pdf";
     std::string title_plot5 = "Power vs resistance;TES resistance [mOhm];TES power [pW];";
     rootUtils::plot( TES_resistance, power, plotTitle, title_plot5 );
-    std::cout<<"[DONE]"<<std::endl;
+    std::cout<<"[done]"<<std::endl;
 
-    std::cout<<"======= R E S U L T S ========"<<std::endl;
+    std::cout<<"\n=================== R E S U L T S ==================="<<std::endl;
     std::cout<<"Parasitic resistance calculated as: "<<Rp<<" [mOhm] "<<std::endl;
     std::cout<<"Normal resistance (parasitic subtracted) calculated as: "<<Rn<<" [mOhm] "<<std::endl;
+    std::cout<<"[Program complete]"<<std::endl;
 
     return 0;
 
