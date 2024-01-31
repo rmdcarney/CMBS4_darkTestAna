@@ -23,9 +23,15 @@
 //Read in data file, calculate mean values. 
 int main(int argc, char *argv[]){
 
+    if( argc != 5 ){
+        std::cout<<"Run like: ./bin/psat(etc) dataFile outputPrefix Rp[mOhm] science_TES_Rn_[mOhm]"<<std::endl;
+        return 0;
+    }
     //Supress root output
     gErrorIgnoreLevel = kFatal;
     std::string prefix = argv[2];
+    double Rp = std::atof(argv[3]);
+    double Rns = std::atof(argv[4]);
 
     //====================================
     // F I L E   I O 
@@ -48,7 +54,7 @@ int main(int argc, char *argv[]){
     //Reflect curve in x-axis amd convert from SQUID readout output: volts to current measured by SQUID: uA
     //TODO import conversion factor from lut
     std::cout<<"Converting SQUID readout from voltage to current...";
-    const double conversion = -1./0.03617; //Conversion factor for SQUID 2 taken from here: https://commons.lbl.gov/display/CMB/BlueFors+Dilution+Refrigerator#BlueForsDilutionRefrigerator-UsingQuantumDesignSQUIDsfor10mOhmTES
+    const double conversion = -1./0.3617; //Conversion factor for SQUID 2 taken from here: https://commons.lbl.gov/display/CMB/BlueFors+Dilution+Refrigerator#BlueForsDilutionRefrigerator-UsingQuantumDesignSQUIDsfor10mOhmTES
     std::vector<double> Imeas;
     num::transform( SQUIDCtrl_V, conversion, Imeas );
     std::cout<<"[done]"<<std::endl;
@@ -57,7 +63,6 @@ int main(int argc, char *argv[]){
     // Find fit ranges based on shape of IV
     //=======================================
     //Fit linear region
-    // TODO filename
     std::cout<<"Using moments to set fit ranges..."<<std::flush;
 
     //Calculate approximations of the 1st and 2nd moments
@@ -75,12 +80,10 @@ int main(int argc, char *argv[]){
     }
     plotTitle = prefix + "0_diff2.root";
     rootUtils::plot( I_keithley, d2, plotTitle, "");
-
+    
     //Use derivatives to select fit regions
-    unsigned par_i_lo, par_i_hi;
-    if( util::getParasiticRegion( d2, par_i_lo, par_i_hi ) ) return 0;
     unsigned norm_i_lo, norm_i_hi;
-    if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi ) ) return 0;
+    if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi,0.01,0.002 ) ) return 0;
     std::cout<<"[done]"<<std::endl;
 
     //=======================================
@@ -92,7 +95,6 @@ int main(int argc, char *argv[]){
     double m = f->GetParameter(1);
 
     //Subtract offset - this sets an absolute range for the SQUID (which was untethered before)
-    //TODO: filename
     num::removeOffset( Imeas, c );
     TLine* l_sq = rootUtils::createLine( I_keithley, m );
     TLine* l_sq_hi = rootUtils::createVertLine( Imeas, I_keithley,  norm_i_lo );
@@ -124,29 +126,6 @@ int main(int argc, char *argv[]){
     std::cout<<"[done]"<<std::endl;
 
     //====================================
-    // Measure Rp and correct offset
-    //====================================
-    //Fit parasitic region and remove offset
-    //TODO: filename
-    std::cout<<"Fitting parasitic region to measure resistance and remove offset..."<<std::flush;
-    TF1* fp = rootUtils::fit( V1, Imeas, par_i_lo, par_i_hi, "parasiticFit.pdf" ); 
-    double cp = fp->GetParameter(0);
-    double mp = fp->GetParameter(1);
-    double Rp = 1./mp;
-    num::removeOffset( Imeas, cp, par_i_lo, par_i_hi ); //Remove offset for the SQUID part of the data
-    TLine* lp = rootUtils::createLine( V1, mp );
-    TLine* lp_hi = rootUtils::createVertLine( Imeas, V1,  par_i_lo );
-    TLine* lp_lo = rootUtils::createVertLine( Imeas, V1, par_i_hi );
-    std::vector<TLine *> lp_v;
-    lp_v.push_back( lp );
-    lp_v.push_back( lp_lo );
-    lp_v.push_back( lp_hi );
-    plotTitle = prefix + "3_Rp_corrected.pdf";
-    rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, lp_v); 
-    std::cout<<"[done]"<<std::endl;
-    
-    //TODO: filename
-    //====================================
     //Fit normal region and calculate normal re
     //====================================
     std::cout<<"Fitting normal region to measure normal resistance..."<<std::flush;
@@ -160,7 +139,7 @@ int main(int argc, char *argv[]){
     ln_v.push_back( ln );
     ln_v.push_back( ln_lo );
     ln_v.push_back( ln_hi );
-    double Rn = (1./mn)-Rp;
+    double Rn = (1./mn)-Rp-Rns;
     plotTitle = prefix + "4_normalFit.pdf";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, ln_v); 
     std::cout<<"[done]"<<std::endl;
@@ -171,10 +150,8 @@ int main(int argc, char *argv[]){
     // Make a P=I^2.R_tes vs R_tes plot
     std::cout<<"Plotting TES power vs resistance..."<<std::flush;
    
-    //TODO filename
-    //Recover the TES resistance by subtracting parasitic
     std::vector<double> TES_resistance = num::divide(V1,Imeas);
-    num::removeOffset( TES_resistance, Rp ); 
+    num::removeOffset( TES_resistance, (Rp+Rns) ); 
 
     //P = Imeas * I meas * TES_resistance
     std::vector<double> currentSq = num::multiply(Imeas, Imeas); //I^2
@@ -182,13 +159,15 @@ int main(int argc, char *argv[]){
     std::vector<double> power = num::multiply( currentSq, TES_resistance ); //P = I^2 . R
 
     //Plot
-    plotTitle = prefix + "5_PR.pdf";
+    plotTitle = prefix + "5_PR.root";
     std::string title_plot5 = "Power vs resistance;TES resistance [mOhm];TES power [pW];";
+    rootUtils::plot( TES_resistance, power, plotTitle, title_plot5 );
+    plotTitle = prefix + "5_PR.pdf";
     rootUtils::plot( TES_resistance, power, plotTitle, title_plot5 );
     std::cout<<"[done]"<<std::endl;
 
     std::cout<<"\n=================== R E S U L T S ==================="<<std::endl;
-    std::cout<<"Parasitic resistance calculated as: "<<Rp<<" [mOhm] "<<std::endl;
+    std::cout<<"Parasitic resistance and science TES resistance calculated as: "<<(Rp+Rns)<<" [mOhm] "<<std::endl;
     std::cout<<"Normal resistance (parasitic subtracted) calculated as: "<<Rn<<" [mOhm] "<<std::endl;
     std::cout<<"[Program complete]"<<std::endl;
 

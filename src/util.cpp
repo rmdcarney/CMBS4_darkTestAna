@@ -76,7 +76,6 @@ namespace util{
     //Using the supplied second derivative vector, choose the upper bound of the normal fit region
     unsigned getNormalRegion( std::vector<double>& d2, unsigned& lo, unsigned& hi, double threshold_hi, double threshold_lo ){
 
-        //Starting from the lowest x-value, find when d2 exceeds 2. Tis assumes d2 has been sorted and normalized
         unsigned tmpHi(2e6), tmpLo(2e6);
         for(unsigned i=d2.size()-1; i>=0 && i<d2.size(); i--){
             
