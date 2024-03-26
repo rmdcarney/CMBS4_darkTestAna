@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     std::cout<<".\n.\n.\nReading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
     std::string datafile = argv[1];
-    if( util::importData( datafile, I_keithley, SQUIDCtrl_V ) ) return 0;
+    if( util::importData( datafile, I_keithley, SQUIDCtrl_V, 'p' ) ) return 0;
     std::cout<<"[done]"<<std::endl;
 
     //Sort by x

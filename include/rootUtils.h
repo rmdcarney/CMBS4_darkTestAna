@@ -1,6 +1,7 @@
 #ifndef ROOTUTILS_h
 #define ROOTUTILS_h
 
+#include <TAxis.h>
 #include <TCanvas.h>
 #include <TGraphErrors.h>
 #include <TLine.h>

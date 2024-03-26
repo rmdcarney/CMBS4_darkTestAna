@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
     std::cout<<".\n.\n.\nReading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
     std::string datafile = argv[1];
-    if( util::importData( datafile, I_keithley, SQUIDCtrl_V ) ) return 0;
+    if( util::importData( datafile, I_keithley, SQUIDCtrl_V, 'p' ) ) return 0;
     std::cout<<"[done]"<<std::endl;
 
     //Sort by x
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]){
     unsigned par_i_lo, par_i_hi;
     if( util::getParasiticRegion( d2, par_i_lo, par_i_hi ) ) return 0;
     unsigned norm_i_lo, norm_i_hi;
-    if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi ) ) return 0;
+    if( util::getNormalRegion( d2, norm_i_lo, norm_i_hi, 0.02 ) ) return 0;
     std::cout<<"[done]"<<std::endl;
 
     //=======================================
@@ -158,7 +158,10 @@ int main(int argc, char *argv[]){
     ln_v.push_back( ln_hi );
     double Rn = (1./mn)-Rp;
     plotTitle = prefix + "4_normalFit.pdf";
+    plotTitle = prefix + "4i_normalFit.root";
+    title_plots34 = "SAT MF2 R135a-1: Pixel 155 I-V @ 90 mK;Voltage across TES [nV];Current measured in TES branch by SQUID [uA];";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, ln_v); 
+    rootUtils::plot(V1 , Imeas, plotTitle, title_plots34); 
     std::cout<<"[done]"<<std::endl;
 
     //====================================

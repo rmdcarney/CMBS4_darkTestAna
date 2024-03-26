@@ -14,6 +14,7 @@ namespace rootUtils{
         }
 
         TGraphErrors *g = new TGraphErrors(x.size(), &(x[0]), &(y[0]), 0, &(yErr[0]) );
+        g->GetYaxis()->SetRangeUser(0.,50.);  //   Y
         g->Draw("a*");
 
         //Fit the graph with the predefined "pol3" function

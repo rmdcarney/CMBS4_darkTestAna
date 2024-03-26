@@ -2,23 +2,96 @@
 
 namespace util{
 
-    unsigned importData( std::string& filename, std::vector<double>& x, std::vector<double>& y ){
-        
+    unsigned importTempCurve( std::string& filename, std::vector<double>& t, std::vector<double>& r){
+
         std::ifstream infile(filename);
         std::string line;
 
+        //Import data from text file into two vectors
         while (std::getline(infile, line)){
             std::istringstream iss(line);
-            double sqV, sqV_stdDev;
-            double na1, na2;
-            double SMU_I_i, SMU_I_RMS;
-            if( !(iss >> sqV >> sqV_stdDev >> na1 >> na2 >> SMU_I_i >> SMU_I_RMS ) ){ 
+            double temp, resistance;
+            if( !(iss >> temp >> resistance) ){ 
                 std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
                 return 1; 
             } //ss failed
 
-            x.push_back( SMU_I_RMS );
-            y.push_back( sqV );
+            r.push_back( resistance );
+            t.push_back( temp );
+        }
+
+        //Sort
+        if( util::sortByX( r, t ) ){
+            std::cout<<"ERROR: during temp curve import could not sort vectors. Exiting."<<std::endl;
+            return 1;
+        }
+
+        return 0;
+    }
+
+
+    unsigned lookUpThermTemp( const double& measuredResistance, double& measuredTemp, std::vector<double>& r, std::vector<double>& t){
+
+        if( r.empty() || t.empty() ){
+            std::cout<<"ERROR: called LUT before filling. Try running importTempCurve first. Exiting."<<std::endl;
+            return 1;
+        }
+        
+        if( r.size() != t.size() ){
+            std::cout<<"ERROR: temperature and resistance containers are different sizes. Exiting."<<std::endl;
+            return 1;
+        }
+
+        //Get the closest 
+        std::pair<unsigned,unsigned> indices;
+        std::pair<double,double> luValues;
+        num::getClosestPair( measuredResistance, r, indices, luValues );
+       
+        //Look up equivalent temp - NB: this assumes the vectors were sorted together on import, see import function and util::sortByX()
+        double upperT = t[indices.first];
+        double lowerT = t[indices.second];
+        double upperR = r[indices.first];
+        double lowerR = r[indices.second];
+
+        //Linear interpolation
+        measuredTemp = num::lerp( num::getFrac( measuredResistance, upperR, lowerR ), upperT, lowerT );
+        return 0;
+    }
+
+
+    unsigned importData( std::string& filename, std::vector<double>& x, std::vector<double>& y, char filetype ){
+        
+        std::ifstream infile(filename);
+        std::string line;
+
+        switch( filetype ){
+            case 'p': {
+                          while (std::getline(infile, line)){
+                              std::istringstream iss(line);
+                              double sqV, sqV_stdDev;
+                              double na1, na2;
+                              double SMU_I_i, SMU_I_RMS;
+                              if( !(iss >> sqV >> sqV_stdDev >> na1 >> na2 >> SMU_I_i >> SMU_I_RMS ) ){ 
+                                  std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
+                                  return 1; 
+                              } //ss failed
+
+                              x.push_back( SMU_I_RMS );
+                              y.push_back( sqV );
+                          } break; }
+            case 't': {
+                          while (std::getline(infile, line)){
+                              std::istringstream iss(line);
+                              double r, t;
+                              double na1, na2;
+                              if( !(iss >> t >> na1 >> r >> na2  ) ){ 
+                                  std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
+                                  return 1; 
+                              } //ss failed
+
+                              x.push_back( t );
+                              y.push_back( r );
+                          } break; }
         }
         return 0;
     }

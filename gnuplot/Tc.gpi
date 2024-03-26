@@ -46,23 +46,12 @@ YTICS0 = "set ytics ('2.8'2.8,'2.805'2.805,'2.81'2.81,'2.815'2.815,'2.82'2.82);"
 YTICS1 = "set ytics ('-0.25'-0.25,'-0.2'-0.2,'-0.15'-0.15,'-0.1'-0.1,'-0.05'-0.05,'0'0.0);"
 
 set output outputFile
-unset key
+set key top left
 set title plotTitle
 
-set multiplot layout 2,1 rowsfirst
-set xlabel xTitleV
-set ylabel yTitleV
-set xrange[0:32]
-set yrange[2.795:2.823]
-@TMARGIN;@LMARGIN;
-@NOXTICS;@YTICS0;
-plot inputFile u 1:12:18 w yerrorbars ls 14 pt 7 ps 2
-set xlabel xTitleI
-set ylabel yTitleI
-set yrange[-0.25:0.05]
-@BMARGIN;@LMARGIN;
-@XTICS;@YTICS1;
-unset title
-set xlabel xTitleI 
-plot inputFile u 1:13:19 w yerrorbars ls 7 pt 7 ps 2 
-unset multiplot
+set xlabel xTitle
+set ylabel yTitle
+#set xrange[0:32]
+#set yrange[2.795:2.823]
+plot inputFile u 1:2 every 3::1 w line ls 5 title 'Cold to warm', \
+    secondFile u 1:2 every 3::1 w line ls 4 title 'Warm to cold'

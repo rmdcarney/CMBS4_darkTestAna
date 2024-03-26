@@ -1,3 +1,7 @@
+*.eps
+*.pdf
+*.root
+.DS_Store
 *.txt
 *.pdf
 bin/*
