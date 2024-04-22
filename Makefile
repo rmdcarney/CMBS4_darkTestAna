@@ -8,7 +8,7 @@ INCLUDE = -I./. -I./include $(shell root-config --cflags --libs)
 
 # Define compiler and flags
 CXX = g++
-CFLAGS = -g -O0 -Wall -std=c++11 $(INCLUDE) -Wno-psabi
+CFLAGS = -g -O0 -Wall -std=c++14 $(INCLUDE) -Wno-psabi
 LDFLAGS =  -L/usr/local/lib 
 
 # Dir
@@ -38,10 +38,6 @@ $(BIN_DIR)/%: $(OBJ_DIR)/%.o
 	@$(CXX) $(CFLAGS) $(LDFLAGS) $< $(OBJ) -o $@ 
 	@echo "[Linking] $@"
 
-#If running with sc compile with: 'make sc'
-.PHONY: sc
-sc: CFLAGS += -DSC
-sc: all
 
 .PHONY: clean
 clean:
