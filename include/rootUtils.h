@@ -9,6 +9,10 @@
 #include <TStyle.h>
 #include <TFunction.h>
 #include <TF1.h>
+#include <Fit/Fitter.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
+#include <TFile.h>
 
 #include <algorithm>
 #include <iostream>
@@ -19,6 +23,7 @@
 namespace rootUtils{
 
     TF1* fit(std::vector<double> &x, std::vector<double> &y, unsigned lo_i, unsigned hi_i, std::string plotTitle);
+    TFitResultPtr sfit(std::vector<double> &x, std::vector<double> &y, unsigned lo_i, unsigned hi_i, std::string plotTitle);
     void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, std::string axesTitles, TLine* l = 0);
     void plot(std::vector<double> &x, std::vector<double> &y, std::string filename, std::string axesTitles, std::vector<TLine*> l);
     TLine* createLine( std::vector<double>& data, double m );

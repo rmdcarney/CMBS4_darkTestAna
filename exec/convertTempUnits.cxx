@@ -32,8 +32,14 @@ int main(int argc, char *argv[]){
 
     std::cout<<".\n.\n.\nReading Tc: "<<argv[1]<<std::flush;
     std::vector<double> therm_r, SQUIDCtrl_V;
+    std::vector<double> a,b;
+    std::vector< std::vector<double> > data;
+    data.push_back(a);
+    data.push_back(b);
     std::string datafile = argv[1];
-    if( util::importData( datafile, therm_r, SQUIDCtrl_V, 't') ) return 0;
+    if( util::importData( datafile, data, 'c') ) return 0;
+    therm_r     = a;
+    SQUIDCtrl_V = b;
     std::cout<<"[done]"<<std::endl;
 
     //Sort by x

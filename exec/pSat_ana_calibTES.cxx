@@ -39,8 +39,14 @@ int main(int argc, char *argv[]){
     //Get data from file
     std::cout<<".\n.\n.\nReading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
+    std::vector<double> a,b;
+    std::vector< std::vector<double> > data;
+    data.push_back(a);
+    data.push_back(b);
     std::string datafile = argv[1];
-    if( util::importData( datafile, I_keithley, SQUIDCtrl_V, 'p' ) ) return 0;
+    if( util::importData( datafile, data, 'p' ) ) return 0;
+    I_keithley  = a;
+    SQUIDCtrl_V = b;
     std::cout<<"[done]"<<std::endl;
 
     //Sort by x

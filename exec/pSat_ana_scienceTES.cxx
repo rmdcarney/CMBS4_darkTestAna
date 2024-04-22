@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#define SAVE_IV 1
+
 /*
  * Compile like: g++ -std=c++1y -Wall $(root-config --cflags --libs) linearFit.cxx -o linFit
  * Run like: ./linFit [path_to_file]
@@ -33,8 +35,14 @@ int main(int argc, char *argv[]){
     //Get data from file
     std::cout<<".\n.\n.\nReading data file: "<<argv[1]<<std::flush;
     std::vector<double> I_keithley, SQUIDCtrl_V;
+    std::vector<double> a, b;
+    std::vector< std::vector<double> > data;
+    data.push_back( a );
+    data.push_back( b );
     std::string datafile = argv[1];
-    if( util::importData( datafile, I_keithley, SQUIDCtrl_V, 'p' ) ) return 0;
+    if( util::importData( datafile, data, 'p' ) ) return 0;
+    I_keithley  = data[0];
+    SQUIDCtrl_V = data[1];
     std::cout<<"[done]"<<std::endl;
 
     //Sort by x
@@ -141,7 +149,38 @@ int main(int argc, char *argv[]){
     plotTitle = prefix + "3_Rp_corrected.pdf";
     rootUtils::plot(V1 , Imeas, plotTitle, title_plots34, lp_v); 
     std::cout<<"[done]"<<std::endl;
-    
+    if( SAVE_IV ){
+       
+        double start        = 5.0;
+        double end          = 0.0;
+        double range        = start-end;
+        double coarseThres  = 1.0;
+        double coarseSteps  = 100;
+        double fineSteps    = 5000;
+        double setVoltage   = start;
+        double stepSize     = coarseSteps;
+        std::vector<double> vps;
+        unsigned counter = 0;
+        while( setVoltage > end ){
+            if( setVoltage <= coarseThres ) stepSize = fineSteps;
+            setVoltage -= range/stepSize;
+            counter += 1;
+            if( counter > 774 ) vps.push_back(setVoltage); //Hardcoded for now because of truncated file. 
+        }
+        //std::cout<<"Made a vector of Vps of size: "<<vps.size()<<", Ips has size: "<<data[0].size()<<std::endl;
+        std::string IV_filename = "IV_corrected.txt";
+        std::ofstream IV_file( IV_filename );
+        if( IV_file.is_open() ){
+            IV_file << "# I_ps [mA]\tV_ps [V]\tV_TES [nV]\tI_TES [uA]"<<std::endl;
+            for(unsigned i=0; i<V1.size(); i++ ){
+                IV_file << data[0][i] <<"\t"<<vps[i]<<"\t"<< V1[i] << "\t" << Imeas[i] <<std::endl;
+            }
+            IV_file.close();
+        } else {
+            std::cout<<"ERROR: could not write IV-curve to file!"<<std::endl;
+        }
+    }
+
     //====================================
     //Fit normal region and calculate normal re
     //====================================

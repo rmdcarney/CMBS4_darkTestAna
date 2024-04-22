@@ -17,10 +17,10 @@ namespace num{
             return 1; // Can't help you if we're empty.
         }
 
-        //Find first value (assuming vector already sorted) that is closest
+        //Find first value in vector 'v' (assuming v already sorted) that is closest to input 'x'
         std::vector<double>::const_iterator it = std::lower_bound(v.begin(), v.end(), x);
 
-        //Make a pair with the closest values. 
+        //Make a pair with the closest values to x: i is the indices used, p is the pair content.
         if( it == v.end() ){
             i = std::make_pair(v.size()-1, v.size()-1);
             p = std::make_pair(v.back(), v.back());
