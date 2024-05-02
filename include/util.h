@@ -104,6 +104,7 @@ namespace util{
             return chi2;
         }
 
+        //Bunch of stuff on the heap here, TODO: figure out memory management/appropriate containers.
         complexZ *fimpediance;
         const double* ffreq;
         const double* fabs;

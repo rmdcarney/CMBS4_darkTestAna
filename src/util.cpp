@@ -157,7 +157,7 @@ namespace util{
                               std::istringstream iss(line);
                               double t, vGen, vSQUID;
                               double na1, na2;
-                              if( !(iss >> t >> vGen >> vSQUID  ) ){ 
+                              if( !(iss >> t >> vSQUID >> vGen  ) ){ 
                                   std::cout<<"ERROR: could not read file. Formatting?"<<std::endl;
                                   return 1; 
                               } //ss failed
